@@ -114,7 +114,7 @@ chatbot**:
 | `consultar_horario` | "cuál es el horario de atención" · "a qué hora abren" · "cuándo atienden" · "horario de servicios escolares" · "a qué hora cierran" | — | "¿Cuál es el horario de atención?" → `consultar_horario` → "Atendemos de lunes a viernes de 9:00 a 18:00 horas." |
 | `pagar_colegiatura` | "cómo pago mi colegiatura" · "quiero pagar la colegiatura" · "fecha límite de pago" · "dónde pago la colegiatura" · "cuánto cuesta la colegiatura" | `mes` | "Quiero pagar mi colegiatura de noviembre" → `pagar_colegiatura` (mes = noviembre) → "Puedes pagar tu colegiatura de noviembre en el portal de pagos con tarjeta o referencia bancaria; la fecha límite es el día 5 de cada mes." |
 | `solicitar_constancia` | "necesito una constancia de estudios" · "cómo pido una constancia" · "quiero mi carta de no adeudo" · "necesito el kardex" · "cómo saco una constancia" | `tipo` | "¿Cómo saco mi carta de no adeudo?" → `solicitar_constancia` (tipo = no adeudo) → "Puedes solicitar tu constancia de no adeudo desde el portal del alumno, en la sección de trámites; se entrega en un plazo de 2 días hábiles." |
-| `soporte_plataforma` | "no puedo entrar a canvas" · "olvidé mi contraseña" · "mi correo institucional no funciona" · "blackboard no carga" · "no me deja iniciar sesión" | `plataforma` | "No puedo entrar a Canvas" → `soporte_plataforma` (plataforma = canvas) → "Levanté un reporte de soporte para canvas. Un asesor de TI te contactará en menos de 24 horas." |
+| `soporte_plataforma` | "no puedo entrar a canvas" · "olvidé mi contraseña" · "mi correo institucional no funciona" · "blackboard no carga" · "no me deja iniciar sesión" | `plataforma` | "No puedo entrar a Canvas" → `soporte_plataforma` (plataforma = canvas) → "Levanté el reporte #0001 para canvas. Un asesor de TI te contactará en menos de 24 horas." |
 | `despedida` | "gracias" · "hasta luego" · "adiós" · "eso es todo" · "nos vemos" | — | "Gracias, hasta luego" → `despedida` → "¡Gracias por escribir! Que tengas un excelente día." |
 | `fallback` | (cualquier mensaje que no supere el umbral de coincidencias) | — | "Quiero pizza" → `fallback` → "No estoy seguro de haber entendido. Puedo ayudarte con horarios, pagos, constancias o soporte de plataformas. ¿Sobre cuál quieres saber?" |
 
@@ -475,14 +475,17 @@ cubren ese tipo de frases.
   intención por raíces) al problema específico de Servicios Escolares. También lo usé
   para revisar el documento ya armado y detectar inconsistencias (por ejemplo, que la
   respuesta de soporte decía "levanté un reporte" sin que el código hiciera nada real).
-- **Partes elaboradas directamente por el estudiante:** la elección del problema real
-  (consultas de Servicios Escolares), la definición de usuarios, alcance y beneficios,
-  las intenciones y entidades específicas, la ejecución real de las pruebas (correr
-  `evaluar.py` y leer sus resultados), el análisis de por qué fallaba el caso de
-  "Quiero pizza", la decisión de cómo corregirlo (excluir verbos genéricos en vez de
-  subir el umbral a ciegas) y la decisión de implementar `registrar_reporte()` en vez de
-  solo suavizar el texto de la respuesta, fueron revisadas y decididas por mí antes de
-  considerarlas parte final del documento.
+- **Partes elaboradas directamente por el estudiante:** elegí el problema real
+  (consultas de Servicios Escolares), definí usuarios, alcance, beneficios, intenciones
+  y entidades, y corrí yo mismo las pruebas (`evaluar.py`) para leer los resultados.
+  Cuando vi que "Quiero pizza" fallaba, le pregunté a Copilot por qué pasaba; me explicó
+  que era por la palabra "quiero" compartida entre varias intenciones. Entre las dos
+  soluciones posibles (subir el umbral de coincidencias o excluir palabras genéricas),
+  elegí la segunda porque la primera rompía saludos cortos como "hola". Con el reporte
+  de soporte pasó algo parecido: yo noté que el texto decía "levanté un reporte" sin que
+  el código hiciera nada, le pedí a Copilot que lo implementara con un CSV y folio
+  consecutivo, y volví a correr las pruebas para confirmar que el folio se guardaba de
+  verdad antes de darlo por terminado.
 
 ## 12. Referencias (formato APA)
 
