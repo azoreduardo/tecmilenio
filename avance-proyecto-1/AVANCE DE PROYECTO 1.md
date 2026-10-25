@@ -26,20 +26,17 @@
 
 ## 2. Introducción
 
-Las áreas de Servicios Escolares de cualquier universidad reciben, todos los días, un
-volumen alto de preguntas que se repiten casi sin cambios: horarios de atención, fechas
-y forma de pago de la colegiatura, cómo tramitar una constancia o qué hacer cuando no se
-puede entrar a una plataforma institucional (Canvas, correo, Blackboard). Atender estas
-consultas de forma manual consume tiempo del personal administrativo y genera tiempos de
-espera largos para el estudiante, especialmente en temporada de pagos o de inicio de
-semestre.
+Servicios Escolares recibe, todos los días, muchas preguntas que se repiten casi sin
+cambio: horario de atención, cómo y cuándo se paga la colegiatura, cómo tramitar una
+constancia o qué hacer cuando no se puede entrar a Canvas, al correo institucional o a
+Blackboard. Resolver esto a mano le quita tiempo al personal y hace esperar al
+estudiante, sobre todo en fechas de pago o al inicio de semestre.
 
-Este avance presenta la primera versión de un **asistente virtual basado en reglas**,
-construido en Python con NLTK, que responde automáticamente las consultas más frecuentes
-y canaliza a una persona los casos que no reconoce. El objetivo de este documento es
-mostrar el problema que se busca resolver, la arquitectura conceptual del asistente, el
-diseño de sus intenciones conversacionales, el código fuente, la evidencia de su
-ejecución y un primer análisis de resultados y limitaciones.
+Este avance es la primera versión de un asistente basado en reglas (Python + NLTK) que
+responde esas preguntas frecuentes y, cuando no reconoce lo que se le pide, lo dice
+claramente en vez de inventar una respuesta. Abajo explico el problema que ataca, cómo
+está armado por dentro, qué intenciones maneja, el código, las pruebas que le hice y qué
+tanto funcionó (incluyendo lo que todavía falla).
 
 ## 3. Problema seleccionado
 
@@ -51,16 +48,16 @@ ejecución y un primer análisis de resultados y limitaciones.
 | **Alcance** | Horarios de atención, pago de colegiatura (fecha límite y medios de pago), solicitud de constancias (estudios, no adeudo, kardex) y soporte básico de plataformas (Canvas, correo institucional, Blackboard). **No incluye** trámites con datos personales sensibles, pagos en línea reales ni emisión de documentos oficiales: esas acciones se canalizan a una persona o al sistema correspondiente. |
 | **Beneficios esperados** | Reducir el tiempo de espera de los estudiantes, ofrecer atención disponible las 24 horas para las preguntas más comunes, disminuir la carga operativa de Servicios Escolares y dejar que el personal se enfoque en los casos complejos. |
 
-**Justificación del uso de IA:** se trata de un dominio con **reglas claras y
-relativamente estables** (horarios, fechas de pago, requisitos de trámites) y un volumen
-alto de preguntas que se repiten con pocas variantes. De acuerdo con la metodología vista
-en clase ("¿Este problema necesita IA?", [clase-1.md](../clase-1.md)), cuando hay reglas
-claras y estables conviene empezar con un enfoque simbólico (reglas) antes que con un
-modelo de aprendizaje automático: es más barato de construir, totalmente trazable y
-suficiente para este primer alcance. La complejidad del lenguaje natural (sinónimos,
-errores de ortografía, frases ambiguas) sí justifica apoyarse en un pipeline de NLP
-(normalización, tokenización, eliminación de *stopwords* y reducción a raíz), en vez de
-una simple búsqueda de palabras clave.
+**Justificación del uso de IA:** elegí reglas y no un modelo entrenado porque el dominio
+tiene respuestas bastante fijas (el horario no cambia todos los días, la fecha de pago
+tampoco), y porque no tengo un histórico de conversaciones reales de Servicios Escolares
+para entrenar nada. En la clase vimos que, cuando hay reglas claras y estables, conviene
+empezar por ahí antes que por un modelo de aprendizaje automático: es más rápido de
+armar, se puede revisar regla por regla si algo sale mal, y alcanza para este primer
+alcance. Donde sí hace falta algo más que "buscar una palabra clave" es en el lenguaje:
+la gente no siempre escribe igual ("¿a qué hora abren?" vs. "horario de atención"), por
+eso el chatbot normaliza, tokeniza, quita palabras vacías y reduce a raíz antes de
+decidir la intención.
 
 ## 4. Objetivo
 
@@ -136,6 +133,8 @@ está en [`chatbot.py`](./chatbot.py); a continuación, las partes clave:
 ```python
 import re
 import unicodedata
+import csv
+from pathlib import Path
 
 import nltk
 from nltk.corpus import stopwords
@@ -192,8 +191,8 @@ INTENCIONES = {
         "ejemplos": ["no puedo entrar a canvas", "olvide mi contrasena",
                      "mi correo institucional no funciona", "blackboard no carga",
                      "no me deja iniciar sesion"],
-        "respuesta": ("Levanté un reporte de soporte{plataforma_txt}. Un asesor de TI "
-                      "te contactará en menos de 24 horas."),
+        "respuesta": ("Levanté un reporte de soporte. Un asesor de TI te "
+                      "contactará en menos de 24 horas."),
     },
     "despedida": {
         "ejemplos": ["gracias", "hasta luego", "adios", "eso es todo", "nos vemos"],
@@ -215,6 +214,27 @@ PLATAFORMAS = {
     "correo institucional": ["correo", "outlook"],
     "blackboard": ["blackboard", "collaborate"],
 }
+
+# El bot dice "levanté un reporte"; para que eso sea cierto (y no solo texto
+# de relleno), cada reporte de soporte se guarda de verdad en este CSV con
+# un folio consecutivo.
+REPORTES_PATH = Path(__file__).parent / "reportes_soporte.csv"
+
+
+def registrar_reporte(plataforma: str, mensaje: str) -> int:
+    """Guarda el reporte en reportes_soporte.csv y devuelve el folio asignado."""
+    filas_previas = 0
+    if REPORTES_PATH.exists():
+        with open(REPORTES_PATH, encoding="utf-8") as f:
+            filas_previas = max(sum(1 for _ in f) - 1, 0)  # -1 por el encabezado
+    folio = filas_previas + 1
+    es_nuevo = not REPORTES_PATH.exists()
+    with open(REPORTES_PATH, "a", newline="", encoding="utf-8") as f:
+        writer = csv.writer(f)
+        if es_nuevo:
+            writer.writerow(["folio", "plataforma", "mensaje"])
+        writer.writerow([folio, plataforma, mensaje])
+    return folio
 
 
 def preprocesar(texto: str):
@@ -276,11 +296,18 @@ def responder(mensaje: str) -> str:
                  "pagos, constancias o soporte de plataformas. ¿Sobre cuál quieres saber?")
 
     entidades = extraer_entidades(mensaje)
+
+    if intencion == "soporte_plataforma":
+        plataforma = entidades.get("plataforma", "sin especificar")
+        folio = registrar_reporte(plataforma, mensaje)
+        detalle = f" para {plataforma}" if "plataforma" in entidades else ""
+        return (f"Levanté el reporte #{folio:04d}{detalle}. Un asesor de TI te "
+                "contactará en menos de 24 horas.")
+
     plantilla = INTENCIONES[intencion]["respuesta"]
     return plantilla.format(
         mes_txt=f" de {entidades['mes']}" if "mes" in entidades else "",
         tipo_txt=f" de {entidades['tipo']}" if "tipo" in entidades else "",
-        plataforma_txt=f" para {entidades['plataforma']}" if "plataforma" in entidades else "",
     )
 ```
 
@@ -288,8 +315,15 @@ El archivo [`chatbot.py`](./chatbot.py) incluye además la función `chat()` par
 conversar de forma interactiva (pensada para usarse en Google Colab), y
 [`evaluar.py`](./evaluar.py) ejecuta las pruebas funcionales descritas a continuación.
 
-**Código fuente en GitHub:** _(pendiente: subir esta carpeta a un repositorio de GitHub y
-pegar aquí el enlace antes de entregar, tal como pide la instrucción 5)._
+> **Nota sobre una corrección:** en una versión anterior, la respuesta de
+> `soporte_plataforma` era un texto fijo ("Levanté un reporte...") que en realidad no
+> guardaba nada; solo *decía* que lo hacía. Para que la frase fuera cierta, agregué
+> `registrar_reporte()`, que escribe el caso en `reportes_soporte.csv` con un folio
+> consecutivo real (ver [`reportes_soporte.csv`](./reportes_soporte.csv) generado al
+> correr las pruebas).
+
+**Código fuente en GitHub:**
+[github.com/azoreduardo/tecmilenio/tree/main/avance-proyecto-1](https://github.com/azoreduardo/tecmilenio/tree/main/avance-proyecto-1)
 
 ## 8. Evidencias de ejecución
 
@@ -335,12 +369,12 @@ Bot: Puedes solicitar tu constancia de no adeudo desde el portal del alumno, en 
      [esperado=solicitar_constancia | detectado=solicitar_constancia | correcto]
 
 Tú:  No puedo entrar a Canvas
-Bot: Levanté un reporte de soporte para canvas. Un asesor de TI te contactará en
+Bot: Levanté el reporte #0001 para canvas. Un asesor de TI te contactará en
      menos de 24 horas.
      [esperado=soporte_plataforma | detectado=soporte_plataforma | correcto]
 
 Tú:  Olvidé mi contraseña del correo institucional
-Bot: Levanté un reporte de soporte para correo institucional. Un asesor de TI te
+Bot: Levanté el reporte #0002 para correo institucional. Un asesor de TI te
      contactará en menos de 24 horas.
      [esperado=soporte_plataforma | detectado=soporte_plataforma | correcto]
 
@@ -354,9 +388,20 @@ Bot: No estoy seguro de haber entendido. Puedo ayudarte con horarios, pagos,
      [esperado=fallback | detectado=fallback | correcto]
 
 Tú:  xq no me deja entrar jaja
-Bot: Levanté un reporte de soporte. Un asesor de TI te contactará en menos de
+Bot: Levanté el reporte #0003. Un asesor de TI te contactará en menos de
      24 horas.
      [esperado=fallback | detectado=soporte_plataforma | INCORRECTO]
+```
+
+El archivo [`reportes_soporte.csv`](./reportes_soporte.csv), generado al correr
+[`evaluar.py`](./evaluar.py), confirma que los folios #0001-#0003 quedaron realmente
+guardados (no solo mencionados en el texto de respuesta):
+
+```text
+folio,plataforma,mensaje
+1,canvas,No puedo entrar a Canvas
+2,correo institucional,Olvidé mi contraseña del correo institucional
+3,sin especificar,xq no me deja entrar jaja
 ```
 
 Tabla resumen (también disponible en [`pruebas/casos.csv`](./pruebas/casos.csv)):
@@ -382,37 +427,43 @@ Tabla resumen (también disponible en [`pruebas/casos.csv`](./pruebas/casos.csv)
   esperada.
 - **Tasa de fallback:** 1 de 12 (8 %); el chatbot reconoció correctamente cuando un
   mensaje estaba fuera de su alcance ("Quiero pizza").
-- **Iteración realizada durante las pruebas:** en una primera versión, el umbral de
+- **Iteración 1 (detección de intención):** en una primera versión, el umbral de
   coincidencias era de 1 raíz y mensajes como "Quiero pizza" se clasificaban como
   `pagar_colegiatura` (falso positivo), porque la palabra "quiero" aparecía en varias
-  intenciones y bastaba para "ganar" por coincidencia. Se identificó esta limitación,
-  se excluyeron del vocabulario de detección los verbos genéricos ("quiero",
-  "necesito", "podría"...) y la precisión subió de 10/12 (83 %) a 11/12 (92 %) sin
-  afectar ninguna de las intenciones correctas.
+  intenciones y bastaba para "ganar" por coincidencia. Excluí del vocabulario de
+  detección los verbos genéricos ("quiero", "necesito", "podría"...) y la precisión
+  subió de 10/12 (83 %) a 11/12 (92 %) sin afectar ninguna de las intenciones
+  correctas.
+- **Iteración 2 (honestidad de la respuesta):** al revisar el código con más cuidado
+  noté que la respuesta de soporte decía "Levanté un reporte..." pero en realidad no
+  guardaba nada, solo era texto fijo. Agregué `registrar_reporte()` para que el
+  reporte quedara escrito de verdad en `reportes_soporte.csv` con folio consecutivo
+  (ver sección 8); así la respuesta ya corresponde a algo que el programa hace y no
+  solo a algo que dice.
 - **Limitación identificada:** el caso 12 ("xq no me deja entrar jaja") se clasificó
   como `soporte_plataforma` en lugar de `fallback`, porque comparte raíces ("no",
   "deja", "entrar") con el ejemplo "no me deja iniciar sesión". Es un caso límite
   razonable (el usuario sí podría estar reportando que no puede entrar a algo), pero
-  el chatbot responde sin pedir primero a qué plataforma se refiere.
-- **Mejora propuesta para el siguiente avance:** cuando se detecte la intención
-  `soporte_plataforma` pero no se haya extraído ninguna entidad `plataforma`, el bot
-  debería preguntar "¿A qué plataforma te refieres: Canvas, correo o Blackboard?" en
-  lugar de responder de forma genérica; esto convierte la entidad en un *slot*
-  obligatorio antes de ejecutar la acción, tal como se vio en el Tema 4 de la clase 2.
+  el chatbot abrió un reporte sin plataforma específica en vez de preguntar primero.
+- **Mejora propuesta para el siguiente avance:** cuando se detecte `soporte_plataforma`
+  sin haber extraído ninguna entidad `plataforma`, el bot debería preguntar antes de
+  abrir el reporte ("¿A qué plataforma te refieres: Canvas, correo o Blackboard?") en
+  vez de registrarlo como "sin especificar"; es decir, convertir la plataforma en un
+  dato obligatorio antes de ejecutar la acción.
 
 ## 10. Conclusiones
 
-Esta primera versión del asistente cumple el alcance definido: reconoce las seis
-intenciones principales con una tasa de comprensión del 92 % sobre los casos de prueba y
-siempre ofrece una salida clara (respuesta útil o *fallback*) en vez de dejar al usuario
-sin opciones. El proceso de prueba y corrección (de 83 % a 92 % de aciertos) mostró en la
-práctica por qué el curso insiste en **probar con casos reales y analizar los errores**,
-no solo con las frases "fáciles": la mejora más efectiva no fue agregar más reglas, sino
-quitar palabras demasiado genéricas del vocabulario de decisión. El siguiente avance
-debería incorporar *slots* obligatorios para las entidades críticas (como la plataforma
-en soporte técnico) y, más adelante, evaluar si conviene complementar las reglas con un
-clasificador de aprendizaje automático para el lenguaje más informal que no cubren los
-ejemplos actuales.
+Esta primera versión cumple el alcance definido: reconoce las seis intenciones
+principales con 92 % de aciertos sobre los casos de prueba y siempre da una salida clara
+(respuesta útil o *fallback*), en vez de dejar al usuario sin opciones. Lo que más me
+sirvió de todo el proceso no fue escribir más reglas, sino **revisar con calma por qué
+fallaba cada caso**: el primer error ("Quiero pizza") se arregló quitando palabras
+demasiado genéricas del vocabulario de decisión, y el segundo problema que encontré no
+era de clasificación sino de honestidad del texto de respuesta (decía que hacía algo que
+no hacía). Para el siguiente avance me falta: pedir la plataforma antes de abrir un
+reporte cuando no la detecto, y valorar si para el lenguaje informal conviene
+complementar las reglas con un clasificador entrenado, ya que los ejemplos actuales no
+cubren ese tipo de frases.
 
 ## 11. Nota metodológica (uso de herramientas de IA)
 
@@ -421,13 +472,17 @@ ejemplos actuales.
 - **Para qué se utilizaron:** como apoyo para organizar la estructura del documento
   según el formato del curso, redactar un primer borrador de las secciones y adaptar el
   patrón de chatbot de reglas visto en clase (normalización, tokenización, detección de
-  intención por raíces) al problema específico de Servicios Escolares.
+  intención por raíces) al problema específico de Servicios Escolares. También lo usé
+  para revisar el documento ya armado y detectar inconsistencias (por ejemplo, que la
+  respuesta de soporte decía "levanté un reporte" sin que el código hiciera nada real).
 - **Partes elaboradas directamente por el estudiante:** la elección del problema real
   (consultas de Servicios Escolares), la definición de usuarios, alcance y beneficios,
-  las intenciones y entidades específicas, la ejecución real de las pruebas, el
-  análisis de por qué fallaba el caso de "Quiero pizza" y la decisión de cómo
-  corregirlo (excluir verbos genéricos en vez de solo subir el umbral) fueron
-  revisados y decididos por mí antes de considerarlos parte final del documento.
+  las intenciones y entidades específicas, la ejecución real de las pruebas (correr
+  `evaluar.py` y leer sus resultados), el análisis de por qué fallaba el caso de
+  "Quiero pizza", la decisión de cómo corregirlo (excluir verbos genéricos en vez de
+  subir el umbral a ciegas) y la decisión de implementar `registrar_reporte()` en vez de
+  solo suavizar el texto de la respuesta, fueron revisadas y decididas por mí antes de
+  considerarlas parte final del documento.
 
 ## 12. Referencias (formato APA)
 

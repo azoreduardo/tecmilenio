@@ -9,6 +9,8 @@ cuando no reconoce la intención.
 """
 import re
 import unicodedata
+import csv
+from pathlib import Path
 
 import nltk
 from nltk.corpus import stopwords
@@ -89,8 +91,8 @@ INTENCIONES = {
             "no me deja iniciar sesion",
         ],
         "respuesta": (
-            "Levanté un reporte de soporte{plataforma_txt}. Un asesor de TI te "
-            "contactará en menos de 24 horas."
+            "Levanté un reporte de soporte. Un asesor de TI te contactará en menos "
+            "de 24 horas."
         ),
     },
     "despedida": {
@@ -118,6 +120,27 @@ PLATAFORMAS = {
     "correo institucional": ["correo", "outlook"],
     "blackboard": ["blackboard", "collaborate"],
 }
+
+# El bot dice "levanté un reporte"; para que eso sea cierto (y no solo texto
+# de relleno), cada reporte de soporte se guarda de verdad en este CSV con
+# un folio consecutivo.
+REPORTES_PATH = Path(__file__).parent / "reportes_soporte.csv"
+
+
+def registrar_reporte(plataforma: str, mensaje: str) -> int:
+    """Guarda el reporte en reportes_soporte.csv y devuelve el folio asignado."""
+    filas_previas = 0
+    if REPORTES_PATH.exists():
+        with open(REPORTES_PATH, encoding="utf-8") as f:
+            filas_previas = max(sum(1 for _ in f) - 1, 0)  # -1 por el encabezado
+    folio = filas_previas + 1
+    es_nuevo = not REPORTES_PATH.exists()
+    with open(REPORTES_PATH, "a", newline="", encoding="utf-8") as f:
+        writer = csv.writer(f)
+        if es_nuevo:
+            writer.writerow(["folio", "plataforma", "mensaje"])
+        writer.writerow([folio, plataforma, mensaje])
+    return folio
 
 
 def preprocesar(texto: str):
@@ -182,11 +205,20 @@ def responder(mensaje: str) -> str:
         )
 
     entidades = extraer_entidades(mensaje)
+
+    if intencion == "soporte_plataforma":
+        plataforma = entidades.get("plataforma", "sin especificar")
+        folio = registrar_reporte(plataforma, mensaje)
+        detalle = f" para {plataforma}" if "plataforma" in entidades else ""
+        return (
+            f"Levanté el reporte #{folio:04d}{detalle}. Un asesor de TI te "
+            "contactará en menos de 24 horas."
+        )
+
     plantilla = INTENCIONES[intencion]["respuesta"]
     return plantilla.format(
         mes_txt=f" de {entidades['mes']}" if "mes" in entidades else "",
         tipo_txt=f" de {entidades['tipo']}" if "tipo" in entidades else "",
-        plataforma_txt=f" para {entidades['plataforma']}" if "plataforma" in entidades else "",
     )
 
 
