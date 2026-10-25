@@ -1,0 +1,13 @@
+mensaje,intencion_esperada,intencion_detectada,correcto
+"Hola, buenas tardes",saludo,saludo,si
+¿Cuál es el horario de atención?,consultar_horario,consultar_horario,si
+¿A qué hora cierran los viernes?,consultar_horario,consultar_horario,si
+Quiero pagar mi colegiatura de noviembre,pagar_colegiatura,pagar_colegiatura,si
+¿Cuál es la fecha límite de pago?,pagar_colegiatura,pagar_colegiatura,si
+Necesito una constancia de estudios,solicitar_constancia,solicitar_constancia,si
+¿Cómo saco mi carta de no adeudo?,solicitar_constancia,solicitar_constancia,si
+No puedo entrar a Canvas,soporte_plataforma,soporte_plataforma,si
+Olvidé mi contraseña del correo institucional,soporte_plataforma,soporte_plataforma,si
+"Gracias, hasta luego",despedida,despedida,si
+Quiero pizza,fallback,fallback,si
+xq no me deja entrar jaja,fallback,soporte_plataforma,no
