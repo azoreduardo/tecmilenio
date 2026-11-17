@@ -10,8 +10,6 @@ transferencia de aprendizaje) y una integración multimodal entre ambos.
 avance-proyecto-2/
 ├── README.md                        # este archivo
 ├── AVANCE DE PROYECTO 2.md          # documento de entrega completo
-├── generar_pdf.py                   # Markdown -> PDF (entregable final)
-├── generar_docx.py                  # Markdown -> .docx editable
 ├── texto/
 │   ├── dataset_intenciones.py       # 105 frases etiquetadas (7 intenciones)
 │   ├── preprocesamiento.py          # tokenización, stopwords, stemming (NLTK)
@@ -79,29 +77,3 @@ python integracion/evaluar.py    # texto, imagen y ambos combinados -> integraci
 
 Ver el análisis completo (incluyendo limitaciones y conclusiones) en
 [`AVANCE DE PROYECTO 2.md`](./AVANCE%20DE%20PROYECTO%202.md).
-
-## Entregable en PDF
-
-`AVANCE DE PROYECTO 2.pdf` es el documento final a entregar (instrucción de
-entrega del avance). Se genera directamente desde el Markdown con
-[`generar_pdf.py`](./generar_pdf.py) usando `reportlab`, sin pasar por Word,
-e incrusta las imágenes reales de resultados (matrices de confusión, curvas de
-entrenamiento) en vez de solo nombrarlas:
-
-```bash
-pip install reportlab pillow
-python generar_pdf.py
-```
-
-Regenera el PDF cada vez que edites `AVANCE DE PROYECTO 2.md`. También existe
-`generar_docx.py` (requiere `python-docx`) si necesitas el `.docx` **editable**
-para copiar/pegar contenido a tu propia plantilla de entrega; incrusta las
-mismas imágenes y tablas con color que el PDF:
-
-```bash
-pip install python-docx
-python generar_docx.py
-```
-
-El `.docx` y el `.pdf` generados están en `.gitignore` (no se versionan): cada
-quien los regenera localmente con los comandos de arriba.
