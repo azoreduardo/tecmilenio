@@ -1,0 +1,37 @@
+[
+  {
+    "entrada_texto": "Hola, buenas tardes",
+    "entrada_imagen": null,
+    "respuesta": "¡Hola! Soy el asistente virtual de Servicios Escolares. ¿En qué te ayudo?"
+  },
+  {
+    "entrada_texto": "¿Cuál es el horario de atención?",
+    "entrada_imagen": null,
+    "respuesta": "Atendemos de lunes a viernes de 9:00 a 18:00 horas."
+  },
+  {
+    "entrada_texto": null,
+    "entrada_imagen": "comprobante_pago",
+    "respuesta": "Veo que adjuntaste un comprobante de pago. Quedó registrado el pago de tu colegiatura; no necesitas hacer nada más."
+  },
+  {
+    "entrada_texto": null,
+    "entrada_imagen": "captura_error",
+    "respuesta": "Veo que adjuntaste una captura de un error de plataforma. Levanté un reporte de soporte con esta evidencia. Un asesor de TI te contactará en menos de 24 horas."
+  },
+  {
+    "entrada_texto": "Ya pagué mi colegiatura, aquí está mi comprobante",
+    "entrada_imagen": "comprobante_pago",
+    "respuesta": "Puedes pagar tu colegiatura en el portal de pagos; la fecha límite es el día 5 de cada mes. Veo que adjuntaste un comprobante de pago. Quedó registrado el pago de tu colegiatura; no necesitas hacer nada más. (Tu mensaje y la imagen que adjuntaste coinciden, así que ya puedo continuar con el trámite sin pedirte más datos.)"
+  },
+  {
+    "entrada_texto": "No puedo entrar a Canvas",
+    "entrada_imagen": "captura_error",
+    "respuesta": "Levanté un reporte de soporte. Un asesor de TI te contactará en menos de 24 horas. Veo que adjuntaste una captura de un error de plataforma. Levanté un reporte de soporte con esta evidencia. Un asesor de TI te contactará en menos de 24 horas. (Tu mensaje y la imagen que adjuntaste coinciden, así que ya puedo continuar con el trámite sin pedirte más datos.)"
+  },
+  {
+    "entrada_texto": "Necesito mi constancia de estudios",
+    "entrada_imagen": "credencial",
+    "respuesta": "Puedes solicitar tu constancia desde el portal del alumno; se entrega en 2 días hábiles. Veo que adjuntaste tu credencial de estudiante. Tu identidad quedó validada para continuar el trámite."
+  }
+]

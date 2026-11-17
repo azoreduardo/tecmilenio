@@ -3,3 +3,7 @@ __pycache__/
 *.docx
 *.pdf
 .ipynb_checkpoints/
+
+# Avance de Proyecto 2: artefactos regenerables (ver avance-proyecto-2/README.md)
+avance-proyecto-2/imagenes/dataset/
+avance-proyecto-2/imagenes/resultados/modelo_imagenes.pt

@@ -1,0 +1,15 @@
+mensaje,intencion_esperada,intencion_detectada,correcto
+"hola, buenas tardes",saludo,saludo,True
+"que tal, como estas",saludo,saludo,True
+en que horario atienden los lunes,consultar_horario,consultar_horario,True
+hasta que hora dan servicio hoy,consultar_horario,consultar_horario,True
+quiero pagar mi colegiatura de este mes,pagar_colegiatura,pagar_colegiatura,True
+donde saco la ficha para pagar,pagar_colegiatura,pagar_colegiatura,True
+necesito mi constancia de inscripcion,solicitar_constancia,solicitar_constancia,True
+como descargo mi kardex,solicitar_constancia,solicitar_constancia,True
+canvas no me deja entrar,soporte_plataforma,soporte_plataforma,True
+se me olvido la contrasena del correo institucional,soporte_plataforma,soporte_plataforma,True
+"muchas gracias, hasta luego",despedida,despedida,True
+"listo, eso era todo, gracias",despedida,despedida,True
+cual es tu color favorito,fallback,fallback,True
+recomiendame una serie para ver,fallback,fallback,True

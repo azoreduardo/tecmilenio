@@ -1,0 +1,7 @@
+mensaje,imagen,intencion_esperada,intencion_detectada,clase_esperada,clase_detectada,correcto
+"hola, buenas tardes",,saludo,saludo,,,True
+cual es el horario de atencion,,consultar_horario,consultar_horario,,,True
+,comprobante_pago,,,comprobante_pago,comprobante_pago,True
+,captura_error,,,captura_error,captura_error,True
+"ya pague mi colegiatura, aqui esta mi comprobante",comprobante_pago,pagar_colegiatura,pagar_colegiatura,comprobante_pago,comprobante_pago,True
+no puedo entrar a canvas,captura_error,soporte_plataforma,soporte_plataforma,captura_error,captura_error,True

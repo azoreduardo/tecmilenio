@@ -1,0 +1,13 @@
+imagen,clase_esperada,clase_predicha,correcto
+captura_error_test_000.png,captura_error,captura_error,True
+captura_error_test_001.png,captura_error,captura_error,True
+captura_error_test_002.png,captura_error,captura_error,True
+comprobante_pago_test_000.png,comprobante_pago,comprobante_pago,True
+comprobante_pago_test_001.png,comprobante_pago,comprobante_pago,True
+comprobante_pago_test_002.png,comprobante_pago,comprobante_pago,True
+constancia_test_000.png,constancia,constancia,True
+constancia_test_001.png,constancia,constancia,True
+constancia_test_002.png,constancia,constancia,True
+credencial_test_000.png,credencial,credencial,True
+credencial_test_001.png,credencial,credencial,True
+credencial_test_002.png,credencial,credencial,True
